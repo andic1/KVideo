@@ -21,6 +21,8 @@ export default function SettingsPage() {
     passwordAccess,
     accessPasswords,
     envPasswordSet,
+    adminPassword,
+    envAdminPassword,
     realtimeLatency,
     searchDisplayMode,
     fullscreenType,
@@ -105,6 +107,8 @@ export default function SettingsPage() {
             setIsAddModalOpen(true);
           }}
           onEditSource={handleEditSource}
+          adminPassword={adminPassword}
+          envAdminPassword={envAdminPassword}
         />
 
         {/* Sort Options */}

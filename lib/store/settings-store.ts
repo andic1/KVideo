@@ -47,6 +47,7 @@ export interface AppSettings {
   fullscreenType: 'native' | 'window'; // Fullscreen mode preference
   proxyMode: ProxyMode; // Proxy behavior: 'retry' | 'none' | 'always'
   rememberScrollPosition: boolean; // Remember scroll position when navigating back or refreshing
+  adminPassword: string; // Admin password for source management protection
 }
 
 import { exportSettings, importSettings, SEARCH_HISTORY_KEY, WATCH_HISTORY_KEY } from './settings-helpers';
@@ -121,8 +122,10 @@ function getDefaultAppSettings(): AppSettings {
     fullscreenType: 'native',
     proxyMode: 'retry',
     rememberScrollPosition: true,
+    adminPassword: '', // Empty by default, can be set via ENV or settings
   };
 }
+
 
 export const settingsStore = {
   getSettings(): AppSettings {
@@ -199,6 +202,7 @@ export const settingsStore = {
         fullscreenType: parsed.fullscreenType === 'window' ? 'window' : 'native',
         proxyMode: (parsed.proxyMode === 'retry' || parsed.proxyMode === 'none' || parsed.proxyMode === 'always') ? parsed.proxyMode : 'retry',
         rememberScrollPosition: parsed.rememberScrollPosition !== undefined ? parsed.rememberScrollPosition : true,
+        adminPassword: typeof parsed.adminPassword === 'string' ? parsed.adminPassword : '',
       };
     } catch {
       // Even if localStorage fails, we should return defaults + ENV subscriptions

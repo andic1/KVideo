@@ -23,6 +23,10 @@ export function useSettingsPage() {
     const [accessPasswords, setAccessPasswords] = useState<string[]>([]);
     const [envPasswordSet, setEnvPasswordSet] = useState(false);
 
+    // Admin password for source management protection
+    const [adminPassword, setAdminPassword] = useState('');
+    const [envAdminPassword, setEnvAdminPassword] = useState('');
+
     // Display settings
     const [realtimeLatency, setRealtimeLatency] = useState(false);
     const [searchDisplayMode, setSearchDisplayMode] = useState<SearchDisplayMode>('normal');
@@ -42,12 +46,19 @@ export function useSettingsPage() {
         setFullscreenType(settings.fullscreenType);
         setProxyMode(settings.proxyMode);
         setRememberScrollPosition(settings.rememberScrollPosition);
+        setAdminPassword(settings.adminPassword || '');
 
-        // Fetch env password status
+        // Fetch env password status and admin password
         fetch('/api/config')
             .then(res => res.json())
-            .then(data => setEnvPasswordSet(data.hasEnvPassword))
-            .catch(() => setEnvPasswordSet(false));
+            .then(data => {
+                setEnvPasswordSet(data.hasEnvPassword);
+                setEnvAdminPassword(data.adminPassword || '');
+            })
+            .catch(() => {
+                setEnvPasswordSet(false);
+                setEnvAdminPassword('');
+            });
     }, []);
 
     const handleSourcesChange = (newSources: VideoSource[]) => {
@@ -331,6 +342,8 @@ export function useSettingsPage() {
         passwordAccess,
         accessPasswords,
         envPasswordSet,
+        adminPassword,
+        envAdminPassword,
         realtimeLatency,
         searchDisplayMode,
         isAddModalOpen,

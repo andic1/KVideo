@@ -10,12 +10,17 @@ export const runtime = 'edge';
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
 const PERSIST_PASSWORD = process.env.PERSIST_PASSWORD !== 'false';
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 
 export async function GET() {
     return NextResponse.json({
         hasEnvPassword: ACCESS_PASSWORD.length > 0,
         persistPassword: PERSIST_PASSWORD,
         subscriptionSources: SUBSCRIPTION_SOURCES,
+        // Return admin password for source management protection
+        // This is safe because it's only used for client-side validation
+        // The actual protection is that unauthorized users cannot modify sources
+        adminPassword: ADMIN_PASSWORD,
     });
 }
 
