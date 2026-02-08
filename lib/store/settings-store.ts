@@ -2,24 +2,24 @@
  * Settings Store - Manages application settings and preferences
  */
 
-import type { VideoSource, SourceSubscription } from '@/lib/types';
-import { DEFAULT_SOURCES } from '@/lib/api/default-sources';
-import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
-import { createSubscription } from '@/lib/utils/source-import-utils';
+import type { VideoSource, SourceSubscription } from "@/lib/types";
+import { DEFAULT_SOURCES } from "@/lib/api/default-sources";
+import { PREMIUM_SOURCES } from "@/lib/api/premium-sources";
+import { createSubscription } from "@/lib/utils/source-import-utils";
 
 export type SortOption =
-  | 'default'
-  | 'relevance'
-  | 'latency-asc'
-  | 'date-desc'
-  | 'date-asc'
-  | 'rating-desc'
-  | 'name-asc'
-  | 'name-desc';
+  | "default"
+  | "relevance"
+  | "latency-asc"
+  | "date-desc"
+  | "date-asc"
+  | "rating-desc"
+  | "name-asc"
+  | "name-desc";
 
-export type SearchDisplayMode = 'normal' | 'grouped';
-export type AdFilterMode = 'off' | 'keyword' | 'heuristic' | 'aggressive';
-export type ProxyMode = 'retry' | 'none' | 'always';
+export type SearchDisplayMode = "normal" | "grouped";
+export type AdFilterMode = "off" | "keyword" | "heuristic" | "aggressive";
+export type ProxyMode = "retry" | "none" | "always";
 
 export interface AppSettings {
   sources: VideoSource[];
@@ -44,23 +44,31 @@ export interface AppSettings {
   realtimeLatency: boolean; // Enable real-time latency ping updates
   searchDisplayMode: SearchDisplayMode; // 'normal' = individual cards, 'grouped' = group same-name videos
   episodeReverseOrder: boolean; // Persist episode list reverse state
-  fullscreenType: 'native' | 'window'; // Fullscreen mode preference
+  fullscreenType: "native" | "window"; // Fullscreen mode preference
   proxyMode: ProxyMode; // Proxy behavior: 'retry' | 'none' | 'always'
   rememberScrollPosition: boolean; // Remember scroll position when navigating back or refreshing
   adminPassword: string; // Admin password for source management protection
 }
 
-import { exportSettings, importSettings, SEARCH_HISTORY_KEY, WATCH_HISTORY_KEY } from './settings-helpers';
+import {
+  exportSettings,
+  importSettings,
+  SEARCH_HISTORY_KEY,
+  WATCH_HISTORY_KEY,
+} from "./settings-helpers";
 
-const SETTINGS_KEY = 'kvideo-settings';
+const SETTINGS_KEY = "kvideo-settings";
 
 export const getDefaultSources = (): VideoSource[] => DEFAULT_SOURCES;
 export const getDefaultPremiumSources = (): VideoSource[] => PREMIUM_SOURCES;
 
-
-
 function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
-  const envValue = (customValue || process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '').trim();
+  const envValue = (
+    customValue ||
+    process.env.SUBSCRIPTION_SOURCES ||
+    process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES ||
+    ""
+  ).trim();
   if (!envValue) return [];
 
   // 1. Try JSON
@@ -68,7 +76,12 @@ function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
     const raw = JSON.parse(envValue);
     if (Array.isArray(raw)) {
       return raw
-        .filter((item: any) => item && typeof item.name === 'string' && typeof item.url === 'string')
+        .filter(
+          (item: any) =>
+            item &&
+            typeof item.name === "string" &&
+            typeof item.url === "string",
+        )
         .map((item: any) => createSubscription(item.name, item.url));
     }
   } catch (e) {
@@ -77,18 +90,21 @@ function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
 
   // 2. Try Simple URL (or comma separated)
   // Check if it looks like a URL (basic check)
-  if (envValue.includes('http')) {
-    const urls = envValue.split(',').map(u => u.trim()).filter(u => u.length > 0);
-    return urls.map((url, index) => {
-      // Basic URL validation
-      if (!url.startsWith('http')) return null;
+  if (envValue.includes("http")) {
+    const urls = envValue
+      .split(",")
+      .map((u) => u.trim())
+      .filter((u) => u.length > 0);
+    return urls
+      .map((url, index) => {
+        // Basic URL validation
+        if (!url.startsWith("http")) return null;
 
-      const name = urls.length > 1
-        ? `系统预设源 ${index + 1}`
-        : `系统预设源`;
+        const name = urls.length > 1 ? `系统预设源 ${index + 1}` : `系统预设源`;
 
-      return createSubscription(name, url);
-    }).filter((s): s is SourceSubscription => s !== null);
+        return createSubscription(name, url);
+      })
+      .filter((s): s is SourceSubscription => s !== null);
   }
 
   return [];
@@ -102,7 +118,7 @@ function getDefaultAppSettings(): AppSettings {
     sources: getDefaultSources(),
     premiumSources: getDefaultPremiumSources(),
     subscriptions: getEnvSubscriptions(),
-    sortBy: 'default',
+    sortBy: "default",
     searchHistory: true,
     watchHistory: true,
     passwordAccess: false,
@@ -114,23 +130,22 @@ function getDefaultAppSettings(): AppSettings {
     skipOutroSeconds: 0,
     showModeIndicator: false,
     adFilter: false,
-    adFilterMode: 'heuristic',
+    adFilterMode: "heuristic",
     adKeywords: [],
     realtimeLatency: false,
-    searchDisplayMode: 'normal',
+    searchDisplayMode: "normal",
     episodeReverseOrder: false,
-    fullscreenType: 'native',
-    proxyMode: 'retry',
+    fullscreenType: "native",
+    proxyMode: "retry",
     rememberScrollPosition: true,
-    adminPassword: '', // Empty by default, can be set via ENV or settings
+    adminPassword: "", // Empty by default, can be set via ENV or settings
   };
 }
-
 
 export const settingsStore = {
   getSettings(): AppSettings {
     // SSR: Return defaults
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return getDefaultAppSettings();
     }
 
@@ -146,7 +161,9 @@ export const settingsStore = {
       const envSubscriptions = getEnvSubscriptions();
 
       // Parse stored subscriptions
-      const storedSubscriptions = Array.isArray(parsed.subscriptions) ? parsed.subscriptions : [];
+      const storedSubscriptions = Array.isArray(parsed.subscriptions)
+        ? parsed.subscriptions
+        : [];
 
       // Merge: ENV subscriptions take precedence for existence, but we want to keep local state (like lastUpdated) if possible
       // However, for simplicity and ensuring "auto update" as user requested, if it's in ENV, we act as if it's a fresh/enforced source
@@ -154,16 +171,26 @@ export const settingsStore = {
 
       const mergedSubscriptions = [...storedSubscriptions];
 
-      envSubscriptions.forEach(envSub => {
-        const existingIndex = mergedSubscriptions.findIndex(s => s.url === envSub.url);
+      envSubscriptions.forEach((envSub) => {
+        // Try to match by URL first (exact match)
+        let existingIndex = mergedSubscriptions.findIndex(
+          (s) => s.url === envSub.url,
+        );
+
+        // If not found by URL, try to match by NAME to handle URL updates
+        if (existingIndex === -1) {
+          existingIndex = mergedSubscriptions.findIndex(
+            (s) => s.name === envSub.name,
+          );
+        }
+
         if (existingIndex > -1) {
-          // Update name if changed in ENV, but keep ID and lastUpdated from local to avoid unnecessary re-fetches or ID shifts if dependent
-          // BUT, if the user explicitly wants "ENV input... automatically update", maybe they mean the content updates.
-          // Let's just ensure it exists.
+          // Update existing source (name or URL might have changed)
           mergedSubscriptions[existingIndex] = {
             ...mergedSubscriptions[existingIndex],
-            name: envSub.name, // Allow renaming via ENV
-            autoRefresh: true // Enforce autoRefresh for ENV sources
+            name: envSub.name,
+            url: envSub.url,
+            autoRefresh: true,
           };
         } else {
           mergedSubscriptions.push(envSub);
@@ -171,38 +198,76 @@ export const settingsStore = {
       });
 
       // Filter out invalid sources (missing baseUrl etc)
-      const validSources = (Array.isArray(parsed.sources) ? parsed.sources : getDefaultSources())
-        .filter((s: any) => s && s.id && s.name && s.baseUrl);
+      const validSources = (
+        Array.isArray(parsed.sources) ? parsed.sources : getDefaultSources()
+      ).filter((s: any) => s && s.id && s.name && s.baseUrl);
 
-      const validPremiumSources = (Array.isArray(parsed.premiumSources) ? parsed.premiumSources : getDefaultPremiumSources())
-        .filter((s: any) => s && s.id && s.name && s.baseUrl);
+      const validPremiumSources = (
+        Array.isArray(parsed.premiumSources)
+          ? parsed.premiumSources
+          : getDefaultPremiumSources()
+      ).filter((s: any) => s && s.id && s.name && s.baseUrl);
 
       // Validate that parsed data has all required properties
       return {
         sources: validSources,
         premiumSources: validPremiumSources,
-        subscriptions: mergedSubscriptions.filter((s: any) => s && s.id && s.name && s.url),
-        sortBy: parsed.sortBy || 'default',
-        searchHistory: parsed.searchHistory !== undefined ? parsed.searchHistory : true,
-        watchHistory: parsed.watchHistory !== undefined ? parsed.watchHistory : true,
-        passwordAccess: parsed.passwordAccess !== undefined ? parsed.passwordAccess : false,
-        accessPasswords: Array.isArray(parsed.accessPasswords) ? parsed.accessPasswords : [],
-        autoNextEpisode: parsed.autoNextEpisode !== undefined ? parsed.autoNextEpisode : true,
-        autoSkipIntro: parsed.autoSkipIntro !== undefined ? parsed.autoSkipIntro : false,
-        skipIntroSeconds: typeof parsed.skipIntroSeconds === 'number' ? parsed.skipIntroSeconds : 0,
-        autoSkipOutro: parsed.autoSkipOutro !== undefined ? parsed.autoSkipOutro : false,
-        skipOutroSeconds: typeof parsed.skipOutroSeconds === 'number' ? parsed.skipOutroSeconds : 0,
-        showModeIndicator: parsed.showModeIndicator !== undefined ? parsed.showModeIndicator : false,
+        subscriptions: mergedSubscriptions.filter(
+          (s: any) => s && s.id && s.name && s.url,
+        ),
+        sortBy: parsed.sortBy || "default",
+        searchHistory:
+          parsed.searchHistory !== undefined ? parsed.searchHistory : true,
+        watchHistory:
+          parsed.watchHistory !== undefined ? parsed.watchHistory : true,
+        passwordAccess:
+          parsed.passwordAccess !== undefined ? parsed.passwordAccess : false,
+        accessPasswords: Array.isArray(parsed.accessPasswords)
+          ? parsed.accessPasswords
+          : [],
+        autoNextEpisode:
+          parsed.autoNextEpisode !== undefined ? parsed.autoNextEpisode : true,
+        autoSkipIntro:
+          parsed.autoSkipIntro !== undefined ? parsed.autoSkipIntro : false,
+        skipIntroSeconds:
+          typeof parsed.skipIntroSeconds === "number"
+            ? parsed.skipIntroSeconds
+            : 0,
+        autoSkipOutro:
+          parsed.autoSkipOutro !== undefined ? parsed.autoSkipOutro : false,
+        skipOutroSeconds:
+          typeof parsed.skipOutroSeconds === "number"
+            ? parsed.skipOutroSeconds
+            : 0,
+        showModeIndicator:
+          parsed.showModeIndicator !== undefined
+            ? parsed.showModeIndicator
+            : false,
         adFilter: parsed.adFilter !== undefined ? parsed.adFilter : false,
-        adFilterMode: parsed.adFilterMode || 'heuristic',
+        adFilterMode: parsed.adFilterMode || "heuristic",
         adKeywords: Array.isArray(parsed.adKeywords) ? parsed.adKeywords : [],
-        realtimeLatency: parsed.realtimeLatency !== undefined ? parsed.realtimeLatency : false,
-        searchDisplayMode: parsed.searchDisplayMode === 'grouped' ? 'grouped' : 'normal',
-        episodeReverseOrder: parsed.episodeReverseOrder !== undefined ? parsed.episodeReverseOrder : false,
-        fullscreenType: parsed.fullscreenType === 'window' ? 'window' : 'native',
-        proxyMode: (parsed.proxyMode === 'retry' || parsed.proxyMode === 'none' || parsed.proxyMode === 'always') ? parsed.proxyMode : 'retry',
-        rememberScrollPosition: parsed.rememberScrollPosition !== undefined ? parsed.rememberScrollPosition : true,
-        adminPassword: typeof parsed.adminPassword === 'string' ? parsed.adminPassword : '',
+        realtimeLatency:
+          parsed.realtimeLatency !== undefined ? parsed.realtimeLatency : false,
+        searchDisplayMode:
+          parsed.searchDisplayMode === "grouped" ? "grouped" : "normal",
+        episodeReverseOrder:
+          parsed.episodeReverseOrder !== undefined
+            ? parsed.episodeReverseOrder
+            : false,
+        fullscreenType:
+          parsed.fullscreenType === "window" ? "window" : "native",
+        proxyMode:
+          parsed.proxyMode === "retry" ||
+          parsed.proxyMode === "none" ||
+          parsed.proxyMode === "always"
+            ? parsed.proxyMode
+            : "retry",
+        rememberScrollPosition:
+          parsed.rememberScrollPosition !== undefined
+            ? parsed.rememberScrollPosition
+            : true,
+        adminPassword:
+          typeof parsed.adminPassword === "string" ? parsed.adminPassword : "",
       };
     } catch {
       // Even if localStorage fails, we should return defaults + ENV subscriptions
@@ -224,7 +289,7 @@ export const settingsStore = {
   },
 
   saveSettings(settings: AppSettings): void {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
       this.notifyListeners();
     }
@@ -235,11 +300,15 @@ export const settingsStore = {
   },
 
   importSettings(jsonString: string): boolean {
-    return importSettings(jsonString, (s) => this.saveSettings(s), this.getSettings());
+    return importSettings(
+      jsonString,
+      (s) => this.saveSettings(s),
+      this.getSettings(),
+    );
   },
 
   syncEnvSubscriptions(rawEnvValue: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const currentSettings = this.getSettings();
     const envSubs = getEnvSubscriptions(rawEnvValue);
@@ -249,15 +318,28 @@ export const settingsStore = {
     const mergedSubscriptions = [...currentSettings.subscriptions];
     let changed = false;
 
-    envSubs.forEach(envSub => {
-      const existingIndex = mergedSubscriptions.findIndex(s => s.url === envSub.url);
+    envSubs.forEach((envSub) => {
+      let existingIndex = mergedSubscriptions.findIndex(
+        (s) => s.url === envSub.url,
+      );
+
+      if (existingIndex === -1) {
+        existingIndex = mergedSubscriptions.findIndex(
+          (s) => s.name === envSub.name
+        );
+      }
+
       if (existingIndex > -1) {
         // Only update if something meaningful changed to avoid unnecessary re-renders
-        if (mergedSubscriptions[existingIndex].name !== envSub.name) {
+        if (
+          mergedSubscriptions[existingIndex].name !== envSub.name ||
+          mergedSubscriptions[existingIndex].url !== envSub.url
+        ) {
           mergedSubscriptions[existingIndex] = {
             ...mergedSubscriptions[existingIndex],
             name: envSub.name,
-            autoRefresh: true
+            url: envSub.url,
+            autoRefresh: true,
           };
           changed = true;
         }
@@ -270,26 +352,28 @@ export const settingsStore = {
     if (changed) {
       this.saveSettings({
         ...currentSettings,
-        subscriptions: mergedSubscriptions
+        subscriptions: mergedSubscriptions,
       });
     }
   },
 
   resetToDefaults(): void {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.removeItem(SETTINGS_KEY);
       localStorage.removeItem(SEARCH_HISTORY_KEY);
       localStorage.removeItem(WATCH_HISTORY_KEY);
 
       // Clear all cookies
       document.cookie.split(";").forEach((c) => {
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
 
       // Clear cache if available
-      if ('caches' in window) {
+      if ("caches" in window) {
         caches.keys().then((names) => {
-          names.forEach(name => caches.delete(name));
+          names.forEach((name) => caches.delete(name));
         });
       }
     }
